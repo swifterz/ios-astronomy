@@ -66,9 +66,31 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDataSour
         
         let photoReference = photoReferences[indexPath.item]
         
+         // TODO: Implement image loading here
+        // Temp
+        // URL for the associated image
+        let url = photoReference.imageURL.usingHTTPS!
+        // Image load was successful 
+        print("Testing Image URL: \(url)")
+        URLSession.shared.dataTask(with: url) { (data, _, error) in
+            print("Task was successful")
+            if let error = error {
+                NSLog("\(error)")
+                return
+            }
+
+            guard let data = data  else {
+                NSLog("Failed to return data")
+                return
+            }
+
+            DispatchQueue.main.async {
+                    let image = UIImage(data: data)
+                    cell.imageView.image = image
+            }
+        }.resume()
         
-        
-        // TODO: Implement image loading here
+       
     }
     
     // Properties
