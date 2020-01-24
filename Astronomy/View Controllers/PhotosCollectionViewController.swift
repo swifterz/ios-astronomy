@@ -10,6 +10,9 @@ import UIKit
 
 class PhotosCollectionViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
+    //Properties
+    let cache = Cache<Int, Data>()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -66,31 +69,41 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDataSour
         
         let photoReference = photoReferences[indexPath.item]
         
-         // TODO: Implement image loading here
-        // Temp
-        // URL for the associated image
         let url = photoReference.imageURL.usingHTTPS!
-        // Image load was successful 
-        print("Testing Image URL: \(url)")
-        URLSession.shared.dataTask(with: url) { (data, _, error) in
-            print("Task was successful")
-            if let error = error {
-                NSLog("\(error)")
-                return
-            }
-
-            guard let data = data  else {
-                NSLog("Failed to return data")
-                return
-            }
-
-            DispatchQueue.main.async {
-                    let image = UIImage(data: data)
-                    cell.imageView.image = image
-            }
-        }.resume()
         
-       
+        //Catch
+        if let image = cache.value(key: indexPath.item) {
+            cell.imageView.image = image
+            
+        } else {
+            // TODO: Implement image loading here
+            // Temp
+            // URL for the associated image
+            let url = photoReference.imageURL.usingHTTPS!
+            // Image load was successful
+            URLSession.shared.dataTask(with: url) { (data, _, error) in
+                print("Task was successful")
+                if let error = error {
+                    NSLog("\(error)")
+                    return
+                }
+                
+                guard let data = data  else {
+                    NSLog("Failed to return data")
+                    return
+                }
+                
+                DispatchQueue.main.async {
+                    if let image = UIImage(data: data) {
+                        self.cache.cache(value: image, key: indexPath.item)
+                        if self.collectionView.indexPath(for: cell) == indexPath {
+                            cell.imageView.image = image
+                        }
+                    }
+                }
+            }.resume()
+            
+        }
     }
     
     // Properties
